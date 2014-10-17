@@ -1,8 +1,8 @@
 <?php 
 
-$service = $_GET['service'];
-$method = $_GET['method'];
-$value = $_GET['value'];
+$service = ($_GET['service']) ? $_GET['service'] : "";
+$method = ($_GET['method']) ? $_GET['method'] : "";
+$value = ($_GET['value']) ? $_GET['value'] : "";
 
 //preload error handler
 require_once "classes/ErrorHandlerClass.php";
