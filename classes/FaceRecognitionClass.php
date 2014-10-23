@@ -1,6 +1,6 @@
 <?php
 
-require_once "../FaceRecognition.php";
+require_once "../FaceRecognition.php"; //SETS CONSTANT FOR API KEY
 
 class Face {
 
@@ -12,7 +12,7 @@ class Face {
 
     function uploadFace () {
         if($_SERVER['REQUEST_METHOD'] == "POST") {
-            $allowedExts = array("gif", "jpeg", "jpg", "png");
+            $allowedExts = array("gif", "jpeg", "jpg", "png"); //todo
             $temp = explode(".", $_FILES["file"]["name"]);
             $extension = end($temp);
 
@@ -62,10 +62,19 @@ class Face {
                     "image" => Unirest::file("upload/" . $_FILES["file"]["name"])
                                     )
                 );
-                
+
                 if(count($response->body->faces) > 0) {
-                    $this->insertFile($response->body->faces);
+                    require_once 'classes/SymmetryCalculator.php';
+                    $sym = new SymmetryCalculator($response->body->faces[0]->landmarks);
+                    $percentage = $sym->calculatePercentage();
+                    $this->insertFile($response->body->faces[0], $percentage);
+                    $response->body->image = (array)$response->body->image;
+                    $response->body->image['fileUrl'] = "rest/upload/" . $_FILES["file"]["name"];
+                    $response->body->image['percentage'] = $percentage;
+                    $response->body->image = (object)$response->body->image;
+
                     print_r(json_encode($response->body));
+
                 } else {
                     $err = new ErrorHandler('No face detected');
                 }
@@ -75,17 +84,15 @@ class Face {
         }
     }
 
-    function insertFile($data) {
+    function insertFile($data, $percentage) {
+
+        /*NEEDS A DB UPDATE TO SET PREVIOUS IMAGES TO NOT ACTIVE*/
+
         if(!isset($_SESSION)) {
             session_start();
         }
-        $query = "insert into symmetryFiles (hid,uid,fileName,data,active) values('" . $this->hash . "','" . $_SESSION["uid"] . "','" . $_FILES["file"]["name"] . "','" . json_encode($data) . "', 1)";
-        $result = $this->db->query_db($query);
-
-        if(!$result) {
-            error_log("Couldn't insert file " . $_FILES["file"]["name"] . " into db from user " . $_SESSION["uid"], 0);
-        }
-        
+        $query = "insert into symmetryFiles (hid,uid,fileName,data,active, percentage) values('" . $this->hash . "','" . $_SESSION["uid"] . "','" . $_FILES["file"]["name"] . "','" . "234" . "', 1,'" . $percentage . "')";
+        $result = $this->db->query_db($query);        
     }
 
     function getImageByHash () {

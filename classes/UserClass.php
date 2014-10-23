@@ -23,11 +23,12 @@ class User {
                 $result['exists'] = true;
                 $faceImageObj = new Face();
                 $faceImage = $faceImageObj->getImageByUID($result["uid"]);
-                error_log($faceImage['data']);
+
                 if($faceImage) {
                     $result["faceProcessed"] = 1;
                     $result["face"] = $faceImage["data"];
                 }
+
                 $this->updateLogin($result['uid']);
                 $user = json_encode($result);
                 $this->createSession($result['uid']);
