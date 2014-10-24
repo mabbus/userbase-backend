@@ -36,9 +36,22 @@ class Face {
                         print $image['data'];
                     } else {
                         $this->addFile($upload);
+                        //$this->deleteImage();
                     }
                 }
             }
+        }
+    }
+
+    function deleteImage () {
+        $uid = $_SESSION['uid'];
+        $image = $this->getImageByUID($uid);
+        $query = "delete from symmetryFiles where uid = '" . $uid . "'";
+        $result = $this->db->query_db($query);
+        if($result) {
+            unlink($image['fileName']);
+        } else {
+            error_log('no luck');
         }
     }
 
@@ -52,7 +65,7 @@ class Face {
     }
 
     function getImageByUID ($uid) {
-        $query = "select * from symmetryFiles where uid = '" . $uid . "'";
+        $query = "select * from symmetryFiles where uid = '" . $uid . "' and active = 1";
         $result = $this->db->query_db($query);
 
         if($result) {
