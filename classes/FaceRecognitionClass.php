@@ -18,7 +18,7 @@ class Face {
             $this->extension = end($temp);
             
             if($this->verifyExtension($allowedExts)) {
-                $this->hash = (md5_file($_FILES["file"]["tmp_name"]));
+                $this->hash = (md5_file($_FILES["file"]["tmp_name"])) + time(); // REMOVE TMP TIME() FOR IMAGES WHEN READY
                 $uploadURL = "upload/" . $this->hash . "." . $this->extension;
                 $upload = move_uploaded_file($_FILES["file"]["tmp_name"], $uploadURL);
             } else {
@@ -36,7 +36,7 @@ class Face {
                         print $image['data'];
                     } else {
                         $this->addFile($upload);
-                        //$this->deleteImage();
+                        $this->deleteImage();
                     }
                 }
             }
