@@ -5,6 +5,7 @@ require_once "../FaceRecognition.php"; //SETS CONSTANT FOR API KEY
 class Face {
 
     var $hash;
+    var $extension;
     
     public function Face () {
         $this->db = new MySQL();
@@ -14,19 +15,22 @@ class Face {
         if($_SERVER['REQUEST_METHOD'] == "POST") {
             $allowedExts = array("gif", "jpeg", "jpg", "png"); //todo
             $temp = explode(".", $_FILES["file"]["name"]);
-            $extension = end($temp);
-
-            $uploadURL = "upload/" . $_FILES["file"]["name"];
-            $upload = move_uploaded_file($_FILES["file"]["tmp_name"], $uploadURL);
-
+            $this->extension = end($temp);
+            
+            if($this->verifyExtension($allowedExts)) {
+                $this->hash = (md5_file($_FILES["file"]["tmp_name"]));
+                $uploadURL = "upload/" . $this->hash . "." . $this->extension;
+                $upload = move_uploaded_file($_FILES["file"]["tmp_name"], $uploadURL);
+            } else {
+                $err = new ErrorHandler('Extension not allowed: ' . $this->extension);
+            }
 
             if ($_FILES["file"]["error"] > 0) {
                 echo "Return Code: " . $_FILES["file"]["error"] . "<br>";
             } else {
-                if (file_exists($_FILES["file"]["name"])) {
+                if (file_exists($this->hash . "." . $this->extension)) {
                     echo $_FILES["file"]["name"] . " already exists. ";
                 } else {
-                    $this->hash = (md5_file("upload/" . $_FILES["file"]["name"]));
                     $image = $this->getImageByHash();
                     if($image) {
                         print $image['data'];
@@ -36,6 +40,15 @@ class Face {
                 }
             }
         }
+    }
+
+    function verifyExtension($allowed) {
+        for($i=0; $i < sizeof($allowed); $i++){
+            if($this->extension == $allowed[$i]) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function getImageByUID ($uid) {
@@ -59,7 +72,7 @@ class Face {
                     "X-Mashape-Key" => API_KEY
                 ),
                 array(
-                    "image" => Unirest::file("upload/" . $_FILES["file"]["name"])
+                    "image" => Unirest::file("upload/" . $this->hash . "." . $this->extension)
                                     )
                 );
 
@@ -69,7 +82,7 @@ class Face {
                     $percentage = $sym->calculatePercentage();
                     $this->insertFile($response->body->faces[0], $percentage);
                     $response->body->image = (array)$response->body->image;
-                    $response->body->image['fileUrl'] = "rest/upload/" . $_FILES["file"]["name"];
+                    $response->body->image['fileUrl'] = "rest/upload/" . $this->hash . "." . $this->extension;
                     $response->body->image['percentage'] = $percentage;
                     $response->body->image = (object)$response->body->image;
 
@@ -91,7 +104,7 @@ class Face {
         if(!isset($_SESSION)) {
             session_start();
         }
-        $query = "insert into symmetryFiles (hid,uid,fileName,data,active, percentage) values('" . $this->hash . "','" . $_SESSION["uid"] . "','" . $_FILES["file"]["name"] . "','" . "234" . "', 1,'" . $percentage . "')";
+        $query = "insert into symmetryFiles (hid,uid,fileName,data,active, percentage) values('" . $this->hash . "','" . $_SESSION["uid"] . "','" . $this->hash . "." . $this->extension . "','" . "234" . "', 1,'" . $percentage . "')";
         $result = $this->db->query_db($query);        
     }
 
