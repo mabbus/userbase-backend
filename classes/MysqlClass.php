@@ -2,7 +2,7 @@
 
 class MySQL {
     var $user = 'root';
-    var $pass = 'DB_PASS';
+    var $pass = DB_PASS;
     var $db = 'mobileapp';
     var $host = 'localhost';
     var $connection;
