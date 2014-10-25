@@ -44,6 +44,9 @@ class Face {
     }
 
     function deleteImage () {
+        if(!isset($_SESSION)) {
+            session_start();
+        }
         $uid = $_SESSION['uid'];
         $image = $this->getImageByUID($uid);
         $query = "delete from symmetryFiles where uid = '" . $uid . "'";
