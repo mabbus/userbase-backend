@@ -1,10 +1,10 @@
 <?php 
 
 class MySQL {
-    var $user = 'root';
+    var $user = DB_USER ;
     var $pass = DB_PASS;
-    var $db = 'mobileapp';
-    var $host = 'localhost';
+    var $db = DB_DB;
+    var $host = DB_HOST;
     var $connection;
     var $error;
 
